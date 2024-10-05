@@ -12,7 +12,7 @@ def open_driver():
     
     driver.get('https://www.melkeirani.com/')
     
-    
+    time.sleep(7)
     from_date = driver.find_element(By.ID, 'tar1')
     to_date = driver.find_element(By.ID, 'tar2')
     
@@ -22,27 +22,32 @@ def open_driver():
     
     show_button = driver.find_element(By.ID, 'searchbut')
     show_button.click()
+    return driver
     
 
-def get_homes():
+def get_homes(driver):
     cards = driver.find_elements(By.CSS_SELECTOR, '.col-lg-4.col-xl-3.col-md-12.mb-4')
-
+    
+    homes_links = []
     for card in cards:
-
         link_element = card.find_element(By.TAG_NAME, 'a')
-        
-    
         href = link_element.get_attribute('href')
-        
-    return href
-
-def load_more():
-    load_more_button = driver.find_element(By.CLASS_NAME, 'loadmore') 
-    actions = ActionChains(driver)
-    actions.move_to_element(load_more_button).perform()
-    load_more_button.click()
+        homes_links.append(href)
     
-def how_homes(url):
+    return homes_links
+
+def load_more(driver):
+    try:
+        load_more_button = driver.find_element(By.CLASS_NAME, 'loadmore') 
+        actions = ActionChains(driver)
+        actions.move_to_element(load_more_button).perform()
+        load_more_button.click()
+        time.sleep(2)  # Wait for the new homes to load
+    except Exception as e:
+        print(f"Error loading more homes: {e}")
+    
+def how_homes(driver,url):
+    driver.get(url)
     homes_df = pd.DataFrame(columns=['movie_id', 'type','date', 'address', 'area','infrastructure', 'floors_sum', 'homes_num','floor_num','rooms', 'property_direction', 'view','flooring', 'wall','cabinet','cooler','water','electricity','gas','age','elevator','parking','desc','facilities'])
     
     link = url
@@ -202,16 +207,61 @@ def how_homes(url):
             facilities.append(f)
     except:
         facilities = "couldn't crawl" 
+    
+    
+    return {
+        'related_link': link,
+        'type': type_home,
+        'date' : date,
+        'address': address,
+        'area': area,
+        'infrastructure' : infrastructure,
+        'floors_sum' : floors_sum,
+        'homes_num' : homes_num,
+        'floor_num' : floor_num,
+        'rooms' : rooms,
+        'property_direction' : property_direction,
+        'view' : view,
+        'flooring' : flooring,
+        'wall' : wall,
+        'cabinet' : cooler,
+        'cooler' : cooler,
+        'water' : water,
+        'electricity': electricity,
+        'gas' : gas,
+        'age' : age,
+        'elevator' : elevator,
+        'parking' : parking,
+        'desc' : desc,
+        'facilities' : facilities
         
-        
+    }
+
+def save_to_csv(data):
+    df = pd.DataFrame(data)
+    df.to_csv('homes_data.csv', index=False,encoding='utf-8-sig')
+    print("Data saved to homes_data.csv")
+    
+    
 def main():
-    open_driver()
-    homes = set()
-    for i in range (5):
-        homes.add(get_homes())
-        load_more()
+    driver = open_driver()
+    homes_data = []
+    homes_links = set()
+    for i in range (1):
+        homes_links.update(get_homes(driver))
+        load_more(driver)
         
-        if len(homes) == 96:
-            how_homes() 
+        # if len(homes_links) == 96:
+        #     how_homes() 
+    for link in homes_links:
+        home_details = how_homes(driver, link)
+        homes_data.append(home_details)
+    
+    save_to_csv(homes_data)
+
+    driver.quit()
+    
+if __name__ == "__main__":
+    main()
     
     

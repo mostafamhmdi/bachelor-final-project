@@ -18,7 +18,7 @@ def open_driver():
     
     ##################### DON'T FORGET TO CHANGE DATE ############################
     from_date.send_keys('1400/11/09')  
-    to_date.send_keys('1400/11/10')
+    to_date.send_keys('1400/11/09')
     time.sleep(3)
     show_button = driver.find_element(By.ID, 'searchbut')
     show_button.click()
@@ -279,19 +279,34 @@ def main():
     driver = open_driver()
     homes_data = []
     homes_links = set()
-    for i in range (1):
-        homes_links.update(get_homes(driver))
-        load_more(driver)
+    
+    # Continue loading until no new links are found
+    while True:
+        current_size = len(homes_links)
         
-        # if len(homes_links) == 96:
-        #     how_homes() 
+        # Get new homes and add to the set (set automatically avoids duplicates)
+        homes_links.update(get_homes(driver))
+        
+        # If the size of the set does not increase after loading more, break the loop
+        if len(homes_links) == current_size:
+            print("No new homes found, stopping the load.")
+            break
+        
+        # Load more homes
+        load_more(driver)
+    
+    # Collect details for each home link
+    print(f"Total homes found: {len(homes_links)}")
     for link in homes_links:
         home_details = how_homes(driver, link)
         homes_data.append(home_details)
     
+    # Save the data to CSV
     save_to_csv(homes_data)
 
     driver.quit()
+
+
     
 if __name__ == "__main__":
     main()

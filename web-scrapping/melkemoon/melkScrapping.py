@@ -12,16 +12,17 @@ def open_driver():
     
     driver.get('https://www.melkeirani.com/')
     
-    time.sleep(7)
+    time.sleep(10)
     from_date = driver.find_element(By.ID, 'tar1')
     to_date = driver.find_element(By.ID, 'tar2')
     
     ##################### DON'T FORGET TO CHANGE DATE ############################
     from_date.send_keys('1400/11/09')  
     to_date.send_keys('1400/11/10')
-    
+    time.sleep(3)
     show_button = driver.find_element(By.ID, 'searchbut')
     show_button.click()
+    time.sleep(3)
     return driver
     
 
@@ -48,7 +49,7 @@ def load_more(driver):
     
 def how_homes(driver,url):
     driver.get(url)
-    homes_df = pd.DataFrame(columns=['movie_id', 'type','date', 'address', 'area','infrastructure', 'floors_sum', 'homes_num','floor_num','rooms', 'property_direction', 'view','flooring', 'wall','cabinet','cooler','water','electricity','gas','age','elevator','parking','desc','facilities'])
+    homes_df = pd.DataFrame(columns=['movie_id', 'type','date', 'address', 'area','infrastructure', 'floors_sum', 'homes_num','floor_num','rooms', 'property_direction', 'view','flooring', 'wall','cabinet','cooler','water','electricity','gas','age','elevator','parking','desc','price','mortgage','rent','facilities'])
     
     link = url
     try:
@@ -199,15 +200,43 @@ def how_homes(driver,url):
         desc = desc_dr[1]
     except:
         desc = "couldn't crawl"    
-        
+    
     try:
         facilities = []
         facilities_dr = driver.find_elements(By.CSS_SELECTOR, '.sadiv')
         for f in facilities_dr:
-            facilities.append(f)
+            facilities.append(f.text)
     except:
-        facilities = "couldn't crawl" 
+        facilities = "couldn't crawl"
+        
+    try:
+        price_dr = driver.find_element(By.CSS_SELECTOR, '.col-xl-10').text
+        price_dr = price_dr.replace('قیمت :', '').replace('تومان', '').replace(',', '').strip()
+        price = int(price_dr)
+    except:
+        price = "couldn't crawl" 
     
+    try:
+        mortgage_dr = driver.find_element(By.CSS_SELECTOR, '.col-xl-5:nth-child(1)').text
+        mortgage_dr = mortgage_dr.replace('رهن :', '').replace('تومان', '').replace(',', '').strip()
+        mortgage = int(mortgage_dr)       
+    except:
+        mortgage = "couldn't crawl"
+        
+    try:
+        rent_dr = driver.find_element(By.CSS_SELECTOR, '.price+ .col-xl-5').text
+        rent_dr = rent_dr.replace('اجاره :', '').replace('تومان', '').replace(',', '').strip()
+        rent = int(rent_dr)      
+    except:
+        rent = "couldn't crawl"
+
+    try:
+        facilities = []
+        facilities_dr = driver.find_elements(By.CSS_SELECTOR, '.sadiv')
+        for f in facilities_dr:
+            facilities.append(f.text)
+    except:
+        facilities = "couldn't crawl"
     
     return {
         'related_link': link,
@@ -233,6 +262,9 @@ def how_homes(driver,url):
         'elevator' : elevator,
         'parking' : parking,
         'desc' : desc,
+        'price' : price,
+        'mortgage' : mortgage,
+        'rent' : rent,
         'facilities' : facilities
         
     }

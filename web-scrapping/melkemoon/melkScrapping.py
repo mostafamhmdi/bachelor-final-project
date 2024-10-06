@@ -43,7 +43,7 @@ def load_more(driver):
         actions = ActionChains(driver)
         actions.move_to_element(load_more_button).perform()
         load_more_button.click()
-        time.sleep(2)  # Wait for the new homes to load
+        time.sleep(4)  # Wait for the new homes to load
     except Exception as e:
         print(f"Error loading more homes: {e}")
     
@@ -291,9 +291,10 @@ def main():
         if len(homes_links) == current_size:
             print("No new homes found, stopping the load.")
             break
-        
+        time.sleep(1.5)
         # Load more homes
         load_more(driver)
+        time.sleep(1.5)
     
     # Collect details for each home link
     print(f"Total homes found: {len(homes_links)}")

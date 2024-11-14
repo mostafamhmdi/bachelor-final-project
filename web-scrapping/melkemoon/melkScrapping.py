@@ -2,12 +2,20 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from webdriver_manager.chrome import ChromeDriverManager
 import time
+from selenium.webdriver.chrome.options import Options
 import pandas as pd
 
 
 def open_driver():
-    driver = webdriver.Chrome()
+    chrome_options = Options()
+    # chrome_options.add_argument("--ignore-certificate-errors")
+    # chrome_options.add_argument("--allow-running-insecure-content")
+    # chrome_options.add_argument('--disable-web-security')
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36")
+    driver = webdriver.Chrome(ChromeDriverManager().install(),options=
+                              chrome_options)
     driver.maximize_window()
     
     driver.get('https://www.melkeirani.com/')
@@ -17,8 +25,8 @@ def open_driver():
     to_date = driver.find_element(By.ID, 'tar2')
     
     ##################### DON'T FORGET TO CHANGE DATE ############################
-    from_date.send_keys('1400/11/09')  
-    to_date.send_keys('1400/11/09')
+    from_date.send_keys('1402/06/11')  
+    to_date.send_keys('1402/06/12')
     time.sleep(3)
     show_button = driver.find_element(By.ID, 'searchbut')
     show_button.click()
@@ -43,7 +51,7 @@ def load_more(driver):
         actions = ActionChains(driver)
         actions.move_to_element(load_more_button).perform()
         load_more_button.click()
-        time.sleep(4)  # Wait for the new homes to load
+        time.sleep(8)  # Wait for the new homes to load
     except Exception as e:
         print(f"Error loading more homes: {e}")
     
@@ -212,21 +220,21 @@ def how_homes(driver,url):
     try:
         price_dr = driver.find_element(By.CSS_SELECTOR, '.col-xl-10').text
         price_dr = price_dr.replace('قیمت :', '').replace('تومان', '').replace(',', '').strip()
-        price = int(price_dr)
+        price = price_dr
     except:
         price = "couldn't crawl" 
     
     try:
         mortgage_dr = driver.find_element(By.CSS_SELECTOR, '.col-xl-5:nth-child(1)').text
         mortgage_dr = mortgage_dr.replace('رهن :', '').replace('تومان', '').replace(',', '').strip()
-        mortgage = int(mortgage_dr)       
+        mortgage = mortgage_dr
     except:
         mortgage = "couldn't crawl"
         
     try:
         rent_dr = driver.find_element(By.CSS_SELECTOR, '.price+ .col-xl-5').text
         rent_dr = rent_dr.replace('اجاره :', '').replace('تومان', '').replace(',', '').strip()
-        rent = int(rent_dr)      
+        rent = rent_dr  
     except:
         rent = "couldn't crawl"
 
@@ -271,7 +279,7 @@ def how_homes(driver,url):
 
 def save_to_csv(data):
     df = pd.DataFrame(data)
-    df.to_csv('homes_data.csv', index=False,encoding='utf-8-sig')
+    df.to_csv('homes_data_1.csv', index=False,encoding='utf-8-sig')
     print("Data saved to homes_data.csv")
     
     
@@ -291,10 +299,10 @@ def main():
         if len(homes_links) == current_size:
             print("No new homes found, stopping the load.")
             break
-        time.sleep(1.5)
+        time.sleep(2)
         # Load more homes
         load_more(driver)
-        time.sleep(1.5)
+        time.sleep(2)
     
     # Collect details for each home link
     print(f"Total homes found: {len(homes_links)}")
